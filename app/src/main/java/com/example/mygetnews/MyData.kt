@@ -1,3 +1,4 @@
 package com.example.mygetnews
 
-data class MyData(var newstitle: String, var url:String)
+data class MyData(val title: String, val url: String)
+

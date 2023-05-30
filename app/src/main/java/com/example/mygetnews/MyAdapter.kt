@@ -1,13 +1,45 @@
 package com.example.mygetnews
 
-import android.inputmethodservice.Keyboard
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mygetnews.databinding.RowBinding
+import java.util.*
+import kotlin.collections.ArrayList
 
-class MyAdapter(val items:ArrayList<MyData>):RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
+class MyAdapter(var items:ArrayList<MyData>):RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
+    val filteredItems = ArrayList<MyData>()
+    init {
+        filteredItems.addAll(items)
+    }
+    @SuppressLint("NotifyDataSetChanged")
+    fun filter(query:String?){
+        filteredItems.clear()
+        if(query.isNullOrBlank()){
+            filteredItems.addAll(items)
+        }
+        else{
+            val hangulQuery = filterHangulCharacters(query)
+            val lowerCaseQuery = hangulQuery.toLowerCase(Locale.getDefault())
+            items.forEach { item->
+                val filterTitle = filterHangulCharacters(item.title)
+                if(filterTitle.toLowerCase(Locale.getDefault()).contains(lowerCaseQuery)){
+                    filteredItems.add(item)
+            }
 
+            }
+
+        }
+        notifyDataSetChanged()
+    }
+    @SuppressLint("SuspiciousIndentation")
+    fun filterHangulCharacters(input:String):String {
+    val hangulRegex=Regex("[ㄱ-ㅎㅏ-ㅣ가-힣0-9]+")
+        return input.filter {it.toString().matches(hangulRegex)}
+
+
+    }
     interface OnItemClickListener{
         fun OnItemClick(position:Int)
     }
@@ -25,12 +57,21 @@ class MyAdapter(val items:ArrayList<MyData>):RecyclerView.Adapter<MyAdapter.MyVi
         return MyViewHolder(view)
     }
 
+    @SuppressLint("SuspiciousIndentation")
     override fun onBindViewHolder(holder: MyAdapter.MyViewHolder, position: Int) {
-        holder.binding.newstitle.text=items[position].newstitle
+        if (filteredItems.isNullOrEmpty())
+            holder.binding.newstitle.text=items[position].title
+        else
+        holder.binding.newstitle.text=filteredItems[position].title
+
+
     }
 
     override fun getItemCount(): Int {
-        return items.size
+        if (filteredItems.isNullOrEmpty())
+            return items.size
+        else
+            return filteredItems.size
     }
 
 }
